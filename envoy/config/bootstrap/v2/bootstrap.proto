@@ -19,6 +19,7 @@ import "envoy/config/metrics/v2/stats.proto";
 import "envoy/config/ratelimit/v2/rls.proto";
 
 import "google/protobuf/duration.proto";
+import "google/protobuf/wrappers.proto";
 
 import "validate/validate.proto";
 import "gogoproto/gogo.proto";
@@ -92,9 +93,6 @@ message Bootstrap {
   // Optional set of stats sinks.
   repeated envoy.config.metrics.v2.StatsSink stats_sinks = 6;
 
-  // Configuration for internal processing of stats.
-  envoy.config.metrics.v2.StatsConfig stats_config = 13;
-
   // Optional duration between flushes to configured stats sinks. For
   // performance reasons Envoy latches counters and only flushes counters and
   // gauges at a periodic interval. If not specified the default is 5000ms (5
@@ -119,6 +117,11 @@ message Bootstrap {
 
   // Configuration for the local administration HTTP server.
   Admin admin = 12 [(validate.rules).message.required = true, (gogoproto.nullable) = false];
+
+  // Configuration for internal processing of stats.
+  envoy.config.metrics.v2.StatsConfig stats_config = 13;
+
+  Announce announce = 14;
 }
 
 // Administration interface :ref:`operations documentation
@@ -135,6 +138,23 @@ message Admin {
   // The TCP address that the administration server will listen on.
   envoy.api.v2.core.Address address = 3
       [(validate.rules).message.required = true, (gogoproto.nullable) = false];
+}
+
+message Announce {
+  string service = 1 [(validate.rules).string.min_bytes = 1];
+  string version = 2 [(validate.rules).string.min_bytes = 1];
+  repeated Listener listeners = 3 [(gogoproto.nullable) = false];
+  ZooKeeper zookeeper = 4;
+}
+
+message Listener {
+  string host = 1 [(validate.rules).string.min_bytes = 1];
+  google.protobuf.UInt32Value port = 2 [(validate.rules).uint32.gt = 0];;
+  string protocol = 3 [(validate.rules).string.min_bytes = 1];
+}
+
+message ZooKeeper {
+  string url = 1 [(validate.rules).string.min_bytes = 1];
 }
 
 // Cluster manager :ref:`architecture overview <arch_overview_cluster_manager>`.
